@@ -319,7 +319,12 @@ body {
 <div class="toggle" style="background-color: white; padding: 5px; border-radius: 5px;">
     <label>
         <div class="toggle-btn on" data-place="Water_Quality_DataPoints">On</div>
-        <span style="color:#de2d26; font-family: 'Josefin Sans'; font-size: 19px; font-weight: bold; display:inline-block; margin-left:10px; text-align:left">Paani Project Monitoring Points</span>
+        <span style="color:#de2d26; font-family: 'Josefin Sans'; font-size: 19px; font-weight: bold; display:inline-block; margin-left:10px; text-align:left">Paani Study Points - Water Quality</span>
+    </label>
+
+    <label>
+        <div class="toggle-btn off" data-place="Water_Flow_DataPoints">off</div>
+        <span style="color:#de2d26; font-family: 'Josefin Sans'; font-size: 19px; font-weight: bold; display:inline-block; margin-left:10px; text-align:left">Paani Study Points - Flow</span>
     </label>
 
     <label>
@@ -437,6 +442,7 @@ map.addControl(new mapboxgl.ScaleControl());
 document.addEventListener('DOMContentLoaded', function() {
     const colorMap = {
         'Water_Quality_DataPoints': '#de2d26',
+        'Water_Flow_DataPoints':'#0000FF',
         'State_WaterQuality_Monitoring_Points': '#fc9272',
         'CWC_Monitoring_Points': '#d95f0e'
     };
@@ -640,7 +646,23 @@ map.addSource('Arkavathi_Industrial_Areas', {
         }
     });
 
-
+    map.addSource('Water_Flow_DataPoints', {
+        type: 'vector',
+        url: 'mapbox://prasadmadhuri.cm2w5b70l00il1onk83rece3a-7n4ep'
+    }); 
+    map.addLayer({
+        id: 'Water_Flow_DataPoints',
+        type: 'circle',
+        source: 'Water_Flow_DataPoints',
+        'source-layer': 'Movado_flow_locations',
+        paint: {
+            'circle-color': '#0000FF',
+            'circle-radius': 10
+        },
+        layout: {
+            visibility: 'none'
+        }
+    });
 
     map.addSource('State_WaterQuality_MonitoringPoints', {
         type: 'vector',
@@ -754,6 +776,21 @@ map.on('click', 'Water_Quality_DataPoints', (e) => {
     showWQPopup(pdfUrl);
 });
 
+// Change cursor back to default when not hovering
+map.on('mouseleave', 'Water_Flow_DataPoints', () => {
+    map.getCanvas().style.cursor = '';  // Reset cursor
+});
+
+// Click event to show the PDF popup
+map.on('click', 'Water_Flow_DataPoints', (e) => {
+    map.getCanvas().style.cursor = 'pointer';
+
+    const interactiveIdentifier = e.features[0].properties.Flow_Station_Code;
+
+    // Construct PDF URL
+    const pdfUrl = `${interactiveIdentifier}.pdf`;
+    showWQPopup(pdfUrl);
+});
 
 
 
