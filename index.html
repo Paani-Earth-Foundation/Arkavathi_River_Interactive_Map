@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Show and Hide Layers</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
+
+<style>
+body { margin: 0; padding: 0; }
+#map1 { position: absolute; top: 0; bottom: 0; height:100% ;width: 100%; }
+
+body {
+    font-family: 'Josefin Sans', sans-serif;
+}
+
+#menu {
+    background: #fff;
+    position: absolute;
+    z-index: 1;
+    top: 20px;
+    right: 5px;
+    border-radius: 5px;
+    width: 120px;
+    border: 0px solid #000;
+    font-family: 'Josefin Sans', sans-serif;
+    /*box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);*/
+}
+#coordinates {
+    position: absolute;
+    bottom: 40px; /* Adjust as needed */
+    right: 50px;  /* Adjust as needed to position next to scale control */
+    margin: 0;
+    padding: 10px;
+    background-color: white;
+    color: black;
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 14px;
+    opacity: 0.8;
+    border: 1px solid black;
+}
+#infoPanel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: black;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+    padding: 20px;
+    box-shadow: 2px 0px 5px rgba(0, 0, 0, 0.3);
+    overflow-y: auto;
+    z-index: 2;
+    color: white;
+}
+#infoPanel.show {
+    transform: translateX(0);
+}
+#info-button:hover {
+    cursor: pointer;
+}
+
+#wqPanel {
+    position: absolute;
+    /* top: 10%;
+    left: 10%; */
+    width: 100%;
+    height: 100%;
+    background-color: white;
+    border: 2px solid black;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 3;
+    display: none; /* Hidden by default */
+}
+#wqPanel iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+#wqPanel .close-btn {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    background: red;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+.toggle-btn {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    line-height: 40px;
+    text-align: center;
+    margin-right: 3px;
+    cursor: pointer;
+    font-size: 15px;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.toggle-btn.on {
+    background-color: lightseagreen;
+}
+.toggle-btn.off {
+    background-color: grey;
+}
+#reportBtn {
+    width: 50px;
+    height: 50px;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.3s;
+}
+#reportBtn img {
+    width: 40px;
+    height: 40px;
+    vertical-align: middle;
+}
+#reportBtn:hover img {
+    transform: scale(1.2);
+}
+
+
+/* Styling for the toggle menu */
+.toggle {
+    position: absolute;
+    top: 100px;
+    right: 10px;  /* Keep this to the right */
+    background-color: rgba(100, 100, 100, 0.6); /* Background color */
+    padding: 8px;  /* Adjust the padding to change inner spacing */
+    z-index: 3; /* Ensure the toggle menu stays on top of other content */
+    border-radius: 8px; /* Rounded corners */
+    width: 50%;  /* Set the width to 50% of the screen size */
+    height: auto; /* Adjust height; auto will fit content */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3); /* Add shadow for better appearance */
+}
+
+/* For medium-sized screens */
+@media only screen and (max-width: 768px) {
+    .toggle {
+        width: 60%; /* Reduce the width to 60% for medium screens */
+        padding: 10px; /* Adjust padding to fit screen */
+        top: 180px; /* Adjust top to prevent overlap */
+    }
+}
+
+/* For small mobile screens */
+@media only screen and (max-width: 480px) {
+    .toggle {
+        width: 80%; /* Use 80% width for small mobile screens */
+        padding: 8px; /* Adjust padding for smaller devices */
+        top: 200px; /* Push it down further for smaller screens */
+    }
+}
+
+
+.toggle label {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    
+}
+.toggle span {
+    display: flex;
+    align-items: center;
+    margin-left: 5px;
+    
+}
+#button-container {
+    position: absolute;
+    bottom: 70px;
+    left: 10px;
+    z-index: 3;
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 30px;
+    padding: 5px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid #ccc;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+#info-button {
+    display: block;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: #337ab7;
+    color: #fff;
+    border: none;
+    font-size: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+#info-textbox {
+    display: none;
+}
+
+
+/*The css styling code for the satellite and street selection menu layer*/
+#menu_layers {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #fff;
+    border-radius: 5px;
+    padding: 10px;
+    /*box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);*/
+    z-index: 1;
+    display: flex;
+    gap: 10px;
+}
+.layer-option {
+    display: flex;
+    align-items: center;
+}
+.layer-option input {
+    margin: 0 5px;
+}
+.layer-option label {
+    margin: 0 5px;
+}
+
+
+.popup-panel {
+    position: fixed; /* Changed from absolute to fixed */
+    top: 0; /* Set to 0 to cover entire viewport */
+    left: 0; /* Set to 0 to cover entire viewport */
+    width: 100%; /* Set to 100% to cover entire viewport */
+    height: 100%; /* Set to 100% to cover entire viewport */
+    background-color: white;
+    border: 2px solid black;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 3;
+    display: none; /* Hidden by default */
+}
+.popup-panel iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+.popup-panel .close-btn {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    background: red;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+    z-index: 4; /* Ensure the button is above the iframe */
+}
+
+/*The css styling code for the second menu_layers*/
+
+/* Base Layers Menu styling for large screens */
+#menu_layers_Baselayers {
+    position: absolute;
+    top: 100px; /* Adjusted for better placement */
+    left: 10px; /* Align it to the left */
+    width: 30%; /* Set the width to 50% for larger screens */
+    max-width: none; /* Remove the max-width restriction */
+    background:#fff;
+    border-radius: 8px;
+    padding: 4px;
+    z-index: 2;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+/* For medium-sized screens (tablets) */
+@media only screen and (max-width: 768px) {
+    #menu_layers_Baselayers {
+        width: 40%; /* Adjust the width to 60% for medium screens */
+        left: 5px; /* Keep it aligned to the left */
+        top: 80px; /* Adjust the top position */
+        padding: 8px; /* Adjust padding */
+    }
+}
+
+/* For small mobile screens */
+@media only screen and (max-width: 480px) {
+    #menu_layers_Baselayers {
+        width: 40%; /* Set the width to 80% for small mobile screens */
+        left: 5px; /* Keep aligned to the left */
+        top: 60px; /* Adjust the top for small screens */
+        padding: 8px; /* Reduce padding for small screens */
+    }
+}
+
+
+</style>
+</head>
+<body>
+
+
+<script id="search-js" defer="" src="https://api.mapbox.com/search-js/v1.0.0-beta.21/web.js"></script>
+<div id="map1"></div>
+<div id="coordinates"></div>
+<nav id="menu"></nav>
+<div class="sharethis-sticky-share-buttons"></div>
+
+
+
+<div class="toggle" style="background-color: white; padding: 10px; border-radius: 5px;">
+    <label>
+        <div class="toggle-btn off" data-place="Water_Quality_DataPoints">On</div>
+        <span style="color:#de2d26; font-family: 'Josefin Sans'; font-size: 19px; font-weight: bold; display:inline-block; margin-left:10px; text-align:left">Paani Project Monitoring Points</span>
+    </label>
+
+    <label>
+        <div class="toggle-btn on" data-place="State_WaterQuality_Monitoring_Points">Off</div>
+        <span style="color:#fc9272; font-family: 'Josefin Sans'; font-size: 19px; font-weight: bold; display:inline-block; margin-left:10px; text-align:left">State Monitoring points</span>
+    </label>   
+
+    <label>
+        <div class="toggle-btn on" data-place="CWC_Monitoring_Points">Off</div>
+        <span style="color:#d95f0e; font-family: 'Josefin Sans'; font-size: 19px; font-weight: bold; display:inline-block; margin-left:10px; text-align:left">CWC Monitoring points</span>
+    </label>     
+</div>
+
+
+
+<div id="menu_layers_Baselayers" style="background-color:white;">
+    <h3 style="font-family: 'Josefin Sans', sans-serif; font-size: 18px; color: darkred; margin-bottom: 5px;">Base Layers</h3>
+    
+
+    <div class="layer-option" style="font-family: 'Josefin Sans', sans-serif;">
+        <input id="toggle_industrial" type="checkbox" unchecked>
+        <label for="toggle_industrial" style="color:#542788; font-weight: bold;margin-bottom: 10px;">Industrial Areas</label>
+    </div>
+   
+
+    <div class="layer-option" style="font-family: 'Josefin Sans', sans-serif;">
+        <input id="toggle_quarry" type="checkbox" unchecked>
+        <label for="toggle_quarry" style="color:#b35806; font-weight: bold;margin-bottom: 10px">Quarry Areas</label>
+    </div>
+
+    <div class="layer-option" style="font-family: 'Josefin Sans', sans-serif;">
+        <input id="toggle_basinboundary" type="checkbox" checked>
+        <label for="toggle_basinboundary" style="color:#999999; font-weight: bold;margin-bottom: 10px">Basin Boundary</label>
+    </div>
+
+    <div class="layer-option" style="font-family: 'Josefin Sans', sans-serif;">
+        <input id="toggle_drainage" type="checkbox" unchecked>
+        <label for="toggle_drainage"style="color:#3182bd;font-weight: bold;margin-bottom: 10px"> Drainage </label>
+    </div>
+</div>
+
+
+
+
+
+<div id="infoPanel">
+    <div id="placeImageContainer">
+        <img id="placeImage" src="info_button_Movado.png" alt="Image" style="width: 100vw;">
+    </div>
+</div>
+
+<div id="wqPanel" class="popup-panel">
+    <button id="close-wq-panel" class="close-btn">Close</button>
+    <iframe id="pdfFrame" src="Water_Quality_Data.pdf" type="application/pdf"></iframe>
+</div>
+
+<div id="button-container">
+    <div id="reportBtn"><img src='report_icon.png' alt="Report"></div>
+    <div id="round-button">
+        <button id="info-button">Info</button>
+    </div>
+</div>
+
+<div id="menu_layers">
+    <div class="layer-option">
+        <input id="mapbox/streets-v11" type="radio" name="rtoggle" value="mapbox/streets-v11">
+        <label for="mapbox/streets-v11">Streets</label>
+    </div>
+    <div class="layer-option">
+        <input id="mapbox/satellite-v9" type="radio" name="rtoggle" value="mapbox/satellite-v9">
+        <label for="mapbox/satellite-v9">Satellite</label>
+    </div>
+</div>
+
+<script>
+const searchJS = document.getElementById('search-js');
+    searchJS.onload = function () {
+        const searchBox = new MapboxSearchBox();
+        searchBox.accessToken = 'pk.eyJ1IjoicHJhc2FkbWFkaHVyaSIsImEiOiJjbGg4eHNuaXgwMjFrM2Zub3p6cXZzeGMyIn0.6ruJHZVi-S8WuEacESXnqA';
+        searchBox.options = {
+            types: 'address,poi',
+            proximity: [-73.99209, 40.68933]
+        };
+        searchBox.marker = true;
+        searchBox.mapboxgl = mapboxgl;
+        map.addControl(searchBox);
+    };
+
+    
+mapboxgl.accessToken = 'pk.eyJ1IjoicHJhc2FkbWFkaHVyaSIsImEiOiJjbGg4eHNuaXgwMjFrM2Zub3p6cXZzeGMyIn0.6ruJHZVi-S8WuEacESXnqA';
+var map = new mapboxgl.Map({
+    container: 'map1',
+    style: 'mapbox://styles/mapbox/streets-v11',
+    zoom: 9,
+    center: [77.713, 12.787]
+});
+
+// Add geolocate control to the map
+var geolocateControl = new mapboxgl.GeolocateControl({
+    positionOptions: {
+        enableHighAccuracy: true
+    },
+    trackUserLocation: true,
+    showUserHeading: true
+});
+map.addControl(geolocateControl, 'bottom-left');
+
+// Add zoom and rotation controls to the map
+map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+
+// Add a scale control to the map
+map.addControl(new mapboxgl.ScaleControl());
+
+// to dynamically update colors of the toggle button
+document.addEventListener('DOMContentLoaded', function() {
+    const colorMap = {
+        'Water_Quality_DataPoints': '#de2d26',
+        'State_WaterQuality_Monitoring_Points': '#fc9272',
+        'CWC_Monitoring_Points': '#d95f0e'
+    };
+   
+
+    const buttons = document.querySelectorAll('.toggle-btn');
+
+    buttons.forEach(button => {
+        const place = button.getAttribute('data-place');
+        const color = colorMap[place];
+
+        button.addEventListener('click', function() {
+            this.classList.toggle('on');
+            this.classList.toggle('off');
+
+            if (this.classList.contains('on')) {
+                this.style.backgroundColor = color;
+                this.textContent = 'On';
+            } else {
+                this.style.backgroundColor = 'grey';
+                this.textContent = 'Off';
+            }
+        });
+
+        // Set initial color if the button is already "on"
+        if (button.classList.contains('on')) {
+            button.style.backgroundColor = color;
+        }
+    });
+});
+
+map.on('load', function() {
+    addCustomLayers();
+    const toggleButtons = document.querySelectorAll('.toggle-btn');
+    toggleButtons.forEach((button) => {
+        button.addEventListener('click', (e) => {
+            const place = e.target.getAttribute('data-place');
+            const visibility = map.getLayoutProperty(place, 'visibility');
+            if (visibility === 'visible') {
+                map.setLayoutProperty(place, 'visibility', 'none');
+                e.target.classList.remove('on');
+                e.target.classList.add('off');
+                e.target.innerHTML = 'Off';
+            } else {
+                map.setLayoutProperty(place, 'visibility', 'visible');
+                e.target.classList.remove('off');
+                e.target.classList.add('on');
+                e.target.innerHTML = 'On';
+            }
+        });
+    });
+
+
+
+
+// Adding code between these lines
+
+    // Toggle for Industrial Areas
+    document.getElementById('toggle_industrial').addEventListener('change', function (e) {
+        const visibility = map.getLayoutProperty('Arkavathi_Industrial_Areas', 'visibility');
+        if (e.target.checked) {
+            map.setLayoutProperty('Arkavathi_Industrial_Areas', 'visibility', 'visible');
+        } else {
+            map.setLayoutProperty('Arkavathi_Industrial_Areas', 'visibility', 'none');
+        }
+    });
+
+    // Toggle for Quarry Areas
+    document.getElementById('toggle_quarry').addEventListener('change', function (e) {
+        const visibility = map.getLayoutProperty('Arkavathi_Quarry_Areas', 'visibility');
+        if (e.target.checked) {
+            map.setLayoutProperty('Arkavathi_Quarry_Areas', 'visibility', 'visible');
+        } else {
+            map.setLayoutProperty('Arkavathi_Quarry_Areas', 'visibility', 'none');
+        }
+    });
+
+  // Toggle for Basin Boundary
+    document.getElementById('toggle_basinboundary').addEventListener('change', function (e) {
+        const visibility = map.getLayoutProperty('Basin_Boundary', 'visibility');
+        if (e.target.checked) {
+            map.setLayoutProperty('Basin_Boundary', 'visibility', 'visible');
+        } else {
+            map.setLayoutProperty('Basin_Boundary', 'visibility', 'none');
+        }
+    });
+
+// Toggle for Drainage layer 
+    document.getElementById('toggle_drainage').addEventListener('change', function (e) {
+        const visibility = map.getLayoutProperty('Arkavathi_Drainage', 'visibility');
+        if (e.target.checked) {
+            map.setLayoutProperty('Arkavathi_Drainage', 'visibility', 'visible');
+        } else {
+            map.setLayoutProperty('Arkavathi_Drainage', 'visibility', 'none');
+        }
+    });
+
+
+});
+
+function addCustomLayers() {
+
+    map.addSource('Arkavathi_River_and_Tributaries', {
+        type: 'vector',
+        url: 'mapbox://prasadmadhuri.cm2k18zvn06m91uqqwwpbukji-2mgus'
+    });
+    map.addLayer({
+        id: 'Arkavathi River and its Tributaries',
+        type: 'line',
+        source: 'Arkavathi_River_and_Tributaries',
+        'source-layer': 'Arkavathi_River_and_Tributaries',
+        paint: {
+            'line-color': '#1f4e79 ',
+            'line-width': 2
+        },
+        layout: {
+            visibility: 'visible'
+        }
+    });
+
+
+
+map.addSource('Arkavathi_Drainage', {
+        type: 'vector',
+        url: 'mapbox://prasadmadhuri.9nsht1bg'
+    });
+    map.addLayer({
+        id: 'Arkavathi_Drainage',
+        type: 'line',
+        source: 'Arkavathi_Drainage',
+        'source-layer': 'Arkavathi_Drainage_All_4326-9x26vg',
+        paint: {
+            'line-color': '#3182bd',
+            'line-width': 0.7
+        },
+        layout: {
+            visibility: 'none'
+        }
+    });
+    
+
+map.addSource('Arkavathi_Industrial_Areas', {
+        type: 'vector',
+        url: 'mapbox://prasadmadhuri.5orpg5fh'
+    }); 
+    map.addLayer({
+        id: 'Arkavathi_Industrial_Areas',
+        type: 'fill',
+        source: 'Arkavathi_Industrial_Areas',
+        'source-layer': 'Industrial_Areas-7vlmp8',
+        minzoom: 0,   // Set the minimum zoom level
+        maxzoom: 22,  // Set the maximum zoom level
+        paint: {
+        'fill-color': '#542788 ',  // Set the polygon fill color   #D2691E
+        'fill-opacity': 1    // Optional: Set opacity to make the fill semi-transparent
+        },
+        layout: {
+            visibility: 'none'
+        }
+    });
+
+
+
+    map.addSource('Arkavathi_Quarry_Areas', {
+        type: 'vector',
+        url: 'mapbox://prasadmadhuri.25ofmg0e'
+    }); 
+    map.addLayer({
+        id: 'Arkavathi_Quarry_Areas',
+        type: 'fill',
+        source: 'Arkavathi_Quarry_Areas',
+        'source-layer': 'Arkavathi_Quarries-68g7sb',
+        minzoom: 0,   // Set the minimum zoom level
+        maxzoom: 22,  // Set the maximum zoom level
+        paint: {
+        'fill-color': ' #b35806 ',  // Set the polygon fill color  #FFA500
+        'fill-opacity': 1     // Optional: Set opacity to make the fill semi-transparent
+    
+        },
+        layout: {
+            visibility: 'none'
+        }
+    });
+
+
+    map.addSource('Water_Quality_DataPoints', {
+        type: 'vector',
+        url: 'mapbox://prasadmadhuri.cm2kc64kq1zst1nt1kg33fjvj-1c3lk'
+    }); 
+    map.addLayer({
+        id: 'Water_Quality_DataPoints',
+        type: 'circle',
+        source: 'Water_Quality_DataPoints',
+        'source-layer': 'Movado_locations',
+        paint: {
+            'circle-color': '#de2d26',
+            'circle-radius': 10
+        },
+        layout: {
+            visibility: 'none'
+        }
+    });
+
+
+
+    map.addSource('State_WaterQuality_MonitoringPoints', {
+        type: 'vector',
+        url: 'mapbox://prasadmadhuri.cm2k8oeoi7fga1zp6y3anz49z-39vs3'
+        
+    });
+    map.addLayer({
+        id: 'State_WaterQuality_Monitoring_Points',
+        type: 'circle',
+        source: 'State_WaterQuality_MonitoringPoints',
+        'source-layer': 'Arkavathi_river_state_monitoring',
+        paint: {
+            'circle-color': '#fc9272',
+            'circle-radius': 7
+        },
+        layout: {
+            visibility: 'none'
+        }
+    });
+
+  
+
+    map.addSource('CWC_Monitoring_Points', {
+        type: 'vector',
+        url: 'mapbox://prasadmadhuri.cm2kakvde7g2m1uny4e8nrqkj-59rzu'
+        
+    });
+    map.addLayer({
+        id: 'CWC_Monitoring_Points',
+        type: 'circle',
+        source: 'CWC_Monitoring_Points',
+        'source-layer': 'Arkavathi_CWC_Monitoring_Locatio',
+        paint: {
+            'circle-color': '#d95f0e',
+            'circle-radius': 7
+        },
+        layout: {
+            visibility: 'none'
+        }
+    });
+
+
+    map.addSource('Basin_Boundary', {
+        type: 'vector',
+        url: 'mapbox://prasadmadhuri.clyy39agl1ab71uqfhi0l0dv2-3bks2'
+    });
+    map.addLayer({
+        id: 'Basin_Boundary',
+        type: 'line',
+        source: 'Basin_Boundary',
+        'source-layer': 'Arkavathi_Hydroshed.geojsonl',
+        paint: {
+            'line-color': '#999999',
+            'line-width': 4
+
+            //'line-dasharray': [1, 1]
+        },
+        layout: {
+            visibility: 'visible'
+        }
+    });
+}
+
+document.getElementById('info-button').addEventListener('click', function() {
+    const infoPanel = document.getElementById('infoPanel');
+    if (infoPanel.classList.contains('show')) {
+        closeInfoPanel();
+    } else {
+        openInfoPanel();
+    }
+});
+
+function openInfoPanel() {
+    const infoPanel = document.getElementById('infoPanel');
+    const infoButton = document.getElementById('info-button');
+    infoPanel.classList.add('show');
+    infoButton.textContent = 'X';
+}
+function closeInfoPanel() {
+    const infoPanel = document.getElementById('infoPanel');
+    const infoButton = document.getElementById('info-button');
+    const reportBtn = document.getElementById('reportBtn');
+    infoPanel.classList.remove('show');
+    document.getElementById('reportBtn').style.display = 'none';
+    infoButton.textContent = 'Info';
+}
+document.getElementById('reportBtn').onclick = () => {
+    window.open('https://paani.earth/interactive-map/', '_blank');
+};
+
+//
+
+// Change cursor to pointer on hover
+map.on('mouseenter', 'Water_Quality_DataPoints', () => {
+    map.getCanvas().style.cursor = 'pointer';  // Show the hand/finger cursor
+});
+
+// Change cursor back to default when not hovering
+map.on('mouseleave', 'Water_Quality_DataPoints', () => {
+    map.getCanvas().style.cursor = '';  // Reset cursor
+});
+
+// Click event to show the PDF popup
+map.on('click', 'Water_Quality_DataPoints', (e) => {
+    map.getCanvas().style.cursor = 'pointer';
+
+    const interactiveIdentifier = e.features[0].properties.Sampling_Station_Code;
+
+    // Construct PDF URL
+    const pdfUrl = `${interactiveIdentifier}.pdf`;
+    showWQPopup(pdfUrl);
+});
+
+
+
+
+map.on('click', 'State_WaterQuality_Monitoring_Points', (e) => {
+    map.getCanvas().style.cursor = 'pointer';
+
+    const interactiveIdentifier = e.features[0].properties.interactive_identifier;
+
+    // construct pdf url
+    const pdfUrl = `path/${interactiveIdentifier}.pdf`;
+
+    showWQPopup(pdfUrl);
+  
+});
+
+map.on('click', 'CWC_Monitoring_Points', (e) => {
+    map.getCanvas().style.cursor = 'pointer';
+
+    const interactiveIdentifier = e.features[0].properties.interactive_identifier;
+
+    // construct pdf url
+    const pdfUrl = `path/${interactiveIdentifier}.pdf`;
+
+    showWQPopup(pdfUrl);
+    
+});
+
+
+
+
+function showWQPopup(pdfUrl) {
+    const wqPanel = document.getElementById('wqPanel');
+    const pdfFrame = document.getElementById('pdfFrame');
+    
+    // Load the PDF into the iframe
+    pdfFrame.src = pdfUrl; 
+    wqPanel.style.display = 'block'; // Show the popup
+    
+    // Hide the second menu
+    const secondMenu = document.getElementById('menu_layers_Baselayers');
+    secondMenu.style.display = 'none'; 
+
+    // Hide the info button
+    const infoButton = document.getElementById('info-button');
+    infoButton.style.display = 'none'; 
+}
+
+
+
+
+function closeWQPopup() {
+    const wqPanel = document.getElementById('wqPanel');
+    wqPanel.style.display = 'none'; // Hide the popup
+    
+    // Show the second menu again
+    const secondMenu = document.getElementById('menu_layers_Baselayers');
+    secondMenu.style.display = 'block'; 
+
+    // Show the info button again
+    const infoButton = document.getElementById('info-button');
+    infoButton.style.display = 'block'; 
+}
+
+// Attach the close event to the close button
+document.getElementById('close-wq-panel').addEventListener('click', function() {
+    closeWQPopup();
+
+});
+
+
+document.getElementById('mapbox/streets-v11').addEventListener('click', switchLayer);
+document.getElementById('mapbox/satellite-v9').addEventListener('click', switchLayer);
+
+
+// Display mouse coordinates on the map
+  var coordinatesContainer = document.getElementById('coordinates');
+  coordinatesContainer.style.border = '1px solid black';
+  coordinatesContainer.style.position = 'absolute';
+  coordinatesContainer.style.bottom = '60px';
+  coordinatesContainer.style.left = 'auto';
+  coordinatesContainer.style.right = '60px';
+
+  map.on('mousemove', function(e) {
+    var coordinates = e.lngLat;
+    var lng = coordinates.lng.toFixed(3);
+    var lat = coordinates.lat.toFixed(3);
+    coordinatesContainer.innerHTML = '<strong>Latitude</strong>: ' + lat + '<br><strong>Longitude</strong>: ' + lng;
+  });
+
+
+function switchLayer(event) {
+    var layerId = event.target.value;
+    map.setStyle('mapbox://styles/' + layerId);
+    map.once('style.load', function() {
+        addCustomLayers();
+    });
+}
+</script>
+</body>
+</html>
