@@ -318,24 +318,18 @@ body {
 
 <div class="toggle" style="background-color: white; padding: 5px; border-radius: 5px;">
     <label>
-        <div class="toggle-btn on" data-place="Water_Quality_DataPoints">On</div>
-        <span style="color:#de2d26; font-family: 'Josefin Sans'; font-size: 19px; font-weight: bold; display:inline-block; margin-left:10px; text-align:left">Paani Study Points - Water Quality</span>
+        <div class="toggle-btn on" data-place="Movado_DataPoints">On</div>
+        <span style="color:#de2d26; font-family: 'Josefin Sans'; font-size: 19px; font-weight: bold; display:inline-block; margin-left:10px; text-align:left">Paani Study Points </span>
     </label>
 
-    <label>
-        <div class="toggle-btn off" data-place="Water_Flow_DataPoints">off</div>
-        <span style="color:#0000FF; font-family: 'Josefin Sans'; font-size: 19px; font-weight: bold; display:inline-block; margin-left:10px; text-align:left">Paani Study Points - Flow</span>
-    </label>
+    
 
     <label>
-        <div class="toggle-btn off" data-place="State_WaterQuality_Monitoring_Points">Off</div>
+        <div class="toggle-btn off" data-place="Govt_Monitoring_Points">Off</div>
         <span style="color:#fc9272; font-family: 'Josefin Sans'; font-size: 19px; font-weight: bold; display:inline-block; margin-left:10px; text-align:left">State Monitoring points</span>
     </label>   
 
-    <label>
-        <div class="toggle-btn off" data-place="CWC_Monitoring_Points">Off</div>
-        <span style="color:#d95f0e; font-family: 'Josefin Sans'; font-size: 19px; font-weight: bold; display:inline-block; margin-left:10px; text-align:left">CWC Monitoring points</span>
-    </label>     
+       
 </div>
 
 
@@ -441,8 +435,7 @@ map.addControl(new mapboxgl.ScaleControl());
 // to dynamically update colors of the toggle button
 document.addEventListener('DOMContentLoaded', function() {
     const colorMap = {
-        'Water_Quality_DataPoints': '#de2d26',
-        'Water_Flow_DataPoints':'#0000FF',
+        'Movado_DataPoints': '#de2d26',
         'State_WaterQuality_Monitoring_Points': '#fc9272',
         'CWC_Monitoring_Points': '#d95f0e'
     };
@@ -628,14 +621,15 @@ map.addSource('Arkavathi_Industrial_Areas', {
     });
 
 
-    map.addSource('Water_Quality_DataPoints', {
+    map.addSource('Movado_DataPoints', {
         type: 'vector',
         url: 'mapbox://prasadmadhuri.cm2kc64kq1zst1nt1kg33fjvj-1c3lk'
     }); 
+
     map.addLayer({
-        id: 'Water_Quality_DataPoints',
+        id: 'Movado_DataPoints',
         type: 'circle',
-        source: 'Water_Quality_DataPoints',
+        source: 'Movado_DataPoints',
         'source-layer': 'Movado_locations',
         paint: {
             'circle-color': '#de2d26',
@@ -646,34 +640,18 @@ map.addSource('Arkavathi_Industrial_Areas', {
         }
     });
 
-    map.addSource('Water_Flow_DataPoints', {
-        type: 'vector',
-        url: 'mapbox://prasadmadhuri.cm2w5b70l00il1onk83rece3a-7n4ep'
-    }); 
-    map.addLayer({
-        id: 'Water_Flow_DataPoints',
-        type: 'circle',
-        source: 'Water_Flow_DataPoints',
-        'source-layer': 'Movado_flow_locations',
-        paint: {
-            'circle-color': '#0000FF',
-            'circle-radius': 10
-        },
-        layout: {
-            visibility: 'none'
-        }
-    });
+    
 
-    map.addSource('State_WaterQuality_MonitoringPoints', {
+    map.addSource('Govt_MonitoringPoints', {
         type: 'vector',
         url: 'mapbox://prasadmadhuri.cm2k8oeoi7fga1zp6y3anz49z-39vs3'
         
     });
     map.addLayer({
-        id: 'State_WaterQuality_Monitoring_Points',
+        id: 'Govt_Monitoring_Points',
         type: 'circle',
-        source: 'State_WaterQuality_MonitoringPoints',
-        'source-layer': 'Arkavathi_river_state_monitoring',
+        source: 'Govt_MonitoringPoints',
+        'source-layer': 'Govt_monitoring_locations',
         paint: {
             'circle-color': '#fc9272',
             'circle-radius': 7
@@ -684,25 +662,6 @@ map.addSource('Arkavathi_Industrial_Areas', {
     });
 
   
-
-    map.addSource('CWC_Monitoring_Points', {
-        type: 'vector',
-        url: 'mapbox://prasadmadhuri.cm2kakvde7g2m1uny4e8nrqkj-59rzu'
-        
-    });
-    map.addLayer({
-        id: 'CWC_Monitoring_Points',
-        type: 'circle',
-        source: 'CWC_Monitoring_Points',
-        'source-layer': 'Arkavathi_CWC_Monitoring_Locatio',
-        paint: {
-            'circle-color': '#d95f0e',
-            'circle-radius': 7
-        },
-        layout: {
-            visibility: 'none'
-        }
-    });
 
 
     map.addSource('Basin_Boundary', {
@@ -756,36 +715,20 @@ document.getElementById('reportBtn').onclick = () => {
 //
 
 // Change cursor to pointer on hover
-map.on('mouseenter', 'Water_Quality_DataPoints', () => {
+map.on('mouseenter', 'Movado_DataPoints', () => {
     map.getCanvas().style.cursor = 'pointer';  // Show the hand/finger cursor
 });
 
 // Change cursor back to default when not hovering
-map.on('mouseleave', 'Water_Quality_DataPoints', () => {
+map.on('mouseleave', 'Movado_DataPoints', () => {
     map.getCanvas().style.cursor = '';  // Reset cursor
 });
 
 // Click event to show the PDF popup
-map.on('click', 'Water_Quality_DataPoints', (e) => {
+map.on('click', 'Movado_DataPoints', (e) => {
     map.getCanvas().style.cursor = 'pointer';
 
-    const interactiveIdentifier = e.features[0].properties.Sampling_Station_Code;
-
-    // Construct PDF URL
-    const pdfUrl = `${interactiveIdentifier}.pdf`;
-    showWQPopup(pdfUrl);
-});
-
-// Change cursor back to default when not hovering
-map.on('mouseleave', 'Water_Flow_DataPoints', () => {
-    map.getCanvas().style.cursor = '';  // Reset cursor
-});
-
-// Click event to show the PDF popup
-map.on('click', 'Water_Flow_DataPoints', (e) => {
-    map.getCanvas().style.cursor = 'pointer';
-
-    const interactiveIdentifier = e.features[0].properties.Flow_Station_Code;
+    const interactiveIdentifier = e.features[0].properties.Monitoring_Site_Code;
 
     // Construct PDF URL
     const pdfUrl = `${interactiveIdentifier}.pdf`;
@@ -794,7 +737,7 @@ map.on('click', 'Water_Flow_DataPoints', (e) => {
 
 
 
-map.on('click', 'State_WaterQuality_Monitoring_Points', (e) => {
+map.on('click', 'Govt_Monitoring_Points', (e) => {
     map.getCanvas().style.cursor = 'pointer';
 
     const interactiveIdentifier = e.features[0].properties.interactive_identifier;
@@ -806,17 +749,7 @@ map.on('click', 'State_WaterQuality_Monitoring_Points', (e) => {
   
 });
 
-map.on('click', 'CWC_Monitoring_Points', (e) => {
-    map.getCanvas().style.cursor = 'pointer';
 
-    const interactiveIdentifier = e.features[0].properties.interactive_identifier;
-
-    // construct pdf url
-    const pdfUrl = `path/${interactiveIdentifier}.pdf`;
-
-    showWQPopup(pdfUrl);
-    
-});
 
 
 
