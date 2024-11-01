@@ -436,8 +436,7 @@ map.addControl(new mapboxgl.ScaleControl());
 document.addEventListener('DOMContentLoaded', function() {
     const colorMap = {
         'Movado_DataPoints': '#de2d26',
-        'State_WaterQuality_Monitoring_Points': '#fc9272',
-        'CWC_Monitoring_Points': '#d95f0e'
+        'Govt_Monitoring_Points': '#fc9272'  
     };
    
 
@@ -651,7 +650,7 @@ map.addSource('Arkavathi_Industrial_Areas', {
         id: 'Govt_Monitoring_Points',
         type: 'circle',
         source: 'Govt_MonitoringPoints',
-        'source-layer': 'Govt_monitoring_locations',
+        'source-layer': 'Arkavathi_river_state_monitoring',
         paint: {
             'circle-color': '#fc9272',
             'circle-radius': 7
@@ -745,7 +744,7 @@ map.on('click', 'Govt_Monitoring_Points', (e) => {
     // construct pdf url
     const pdfUrl = `path/${interactiveIdentifier}.pdf`;
 
-    showWQPopup(pdfUrl);
+   // showWQPopup(pdfUrl);
   
 });
 
